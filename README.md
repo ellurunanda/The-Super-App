@@ -8,7 +8,7 @@ The Super App is a React and Vite web application that guides users through a co
 - View a personalized dashboard with widgets
 - Browse movies based on selected categories
 
-The app is designed to work even without external API keys by using fallback data.
+The app is configured for real API data via a server-side proxy.
 
 ## Table of Contents
 
@@ -24,7 +24,6 @@ The app is designed to work even without external API keys by using fallback dat
 - Deployment (Render)
 - Post-Deploy Verification
 - User Flow
-- Fallback Data Behavior
 - Troubleshooting
 - Security Notes
 
@@ -79,7 +78,6 @@ The main assignment areas implemented are:
 
 - Toast notifications for success, warning, info, and error states.
 - Persistent app state using Zustand persist middleware.
-- Fallback content so core UI stays functional without API keys.
 
 ## Tech Stack
 
@@ -114,7 +112,7 @@ High-level source structure:
 	- MovieCard.jsx
 	- MovieModal.jsx
 	- Toasts.jsx
-- src/services/apiServices.js: API clients, transforms, and fallback data
+- src/services/apiServices.js: API clients and response transforms
 - src/store/useStore.js: global state and actions
 - src/styles/global.css: shared styles
 
@@ -162,7 +160,7 @@ Supported keys:
 
 Use .env.example as the template.
 
-If these are not provided, the app uses built-in fallback data for weather, news, and movies.
+These keys are required for live data.
 
 ## API Proxy Architecture
 
@@ -232,6 +230,28 @@ If something fails, check Render logs for:
 - missingServerKey
 - Upstream API errors such as 401, 403, or 429
 
+## MissingServerKey Quick Fix
+
+If API responses show:
+
+- code: missingServerKey
+
+Do this exactly:
+
+1. Open Render service settings.
+2. Confirm service type is Web Service.
+3. Add or verify environment variables:
+	- OPENWEATHER_API_KEY
+	- NEWS_API_KEY
+	- TMDB_API_KEY
+4. Remove old VITE_ key variables if present.
+5. Save changes and trigger a full redeploy.
+
+Important:
+
+- Local .env changes do not update Render.
+- Render only reads variables saved in Render dashboard (or render.yaml env blocks, if configured).
+
 ## User Flow
 
 1. Register on the first screen.
@@ -240,16 +260,6 @@ If something fails, check Render logs for:
 4. Continue to Dashboard.
 5. Review widgets and manage notes/timer/weather.
 6. Navigate to Movies for personalized movie rows and details.
-
-## Fallback Data Behavior
-
-The app intentionally remains usable when API keys are missing.
-
-- Weather falls back to static weather data.
-- News falls back to static headlines.
-- Movies falls back to a curated movie set.
-
-This allows local development and demo usage without external service setup.
 
 ## Troubleshooting
 
@@ -271,6 +281,7 @@ This allows local development and demo usage without external service setup.
 - Restart dev server after changing .env.
 - In production, confirm Render has all 3 server environment variables.
 - Ensure deployment target is Web Service, not Static Site.
+- Ensure Render redeploy happened after env variable changes.
 
 ### Push blocked due to secrets
 

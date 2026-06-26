@@ -19,7 +19,10 @@ The app is designed to work even without external API keys by using fallback dat
 - Prerequisites
 - Local Setup
 - Environment Variables
+- API Proxy Architecture
 - Available Scripts
+- Deployment (Render)
+- Post-Deploy Verification
 - User Flow
 - Fallback Data Behavior
 - Troubleshooting
@@ -161,10 +164,23 @@ Use .env.example as the template.
 
 If these are not provided, the app uses built-in fallback data for weather, news, and movies.
 
-Render production note:
+## API Proxy Architecture
 
-- Deploy this project as a Render Web Service (Node runtime), not a Static Site.
-- Add OPENWEATHER_API_KEY, NEWS_API_KEY, and TMDB_API_KEY in Render environment variables.
+This project uses a server-side API proxy to prevent browser CORS issues and to keep API keys off the client.
+
+- Frontend requests:
+	- /api/weather/*
+	- /api/news/*
+	- /api/tmdb/*
+- Server proxy implementation: server.js
+- Dev proxy for local development: vite.config.js
+
+How requests flow:
+
+1. Browser calls same-origin /api/* routes.
+2. Node/Express server forwards requests to upstream APIs.
+3. API keys are appended server-side from environment variables.
+4. Response is returned to the browser.
 
 ## Available Scripts
 
@@ -172,6 +188,49 @@ Render production note:
 - npm run build: creates production build in dist
 - npm run preview: serves production build locally
 - npm start: runs the Express server that serves dist and proxies API requests
+
+## Deployment (Render)
+
+Deploy this repository as a Render Web Service (Node runtime), not a Static Site.
+
+Required service settings:
+
+- Build Command: npm install && npm run build
+- Start Command: npm start
+
+Required environment variables:
+
+- OPENWEATHER_API_KEY
+- NEWS_API_KEY
+- TMDB_API_KEY
+
+Do not set these in production:
+
+- VITE_OPENWEATHER_API_KEY
+- VITE_NEWS_API_KEY
+- VITE_TMDB_API_KEY
+
+Optional variable:
+
+- VITE_API_BASE_URL (only when frontend and API proxy are hosted on different domains)
+
+Render blueprint file:
+
+- render.yaml
+
+## Post-Deploy Verification
+
+After deploy completes, verify:
+
+1. Dashboard weather widget shows live data.
+2. News widget rotates headlines.
+3. Movies page loads rows for selected categories.
+4. Browser Network tab shows requests to same-origin /api/* routes.
+
+If something fails, check Render logs for:
+
+- missingServerKey
+- Upstream API errors such as 401, 403, or 429
 
 ## User Flow
 
@@ -210,6 +269,8 @@ This allows local development and demo usage without external service setup.
 - Check that .env exists in project root.
 - Check variable names exactly match OPENWEATHER_API_KEY, NEWS_API_KEY, and TMDB_API_KEY.
 - Restart dev server after changing .env.
+- In production, confirm Render has all 3 server environment variables.
+- Ensure deployment target is Web Service, not Static Site.
 
 ### Push blocked due to secrets
 

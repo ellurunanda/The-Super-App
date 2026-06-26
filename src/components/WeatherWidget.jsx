@@ -30,15 +30,7 @@ export default function WeatherWidget() {
       setIsLoading(true);
       setIsTransitioning(true);
       try {
-        const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY?.trim();
-        if (!apiKey && !cancelled) {
-          pushToast({
-            tone: 'warning',
-            title: 'Weather API key missing',
-            message: 'Showing fallback weather until a live key is added.',
-          });
-        }
-        const data = await fetchCurrentWeather(city, apiKey);
+        const data = await fetchCurrentWeather(city);
         if (!cancelled) {
           setWeather(data);
           setIsLoading(false);

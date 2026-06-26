@@ -27,7 +27,6 @@ export default function Movies() {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [loadingGroups, setLoadingGroups] = useState(true);
 
-  const apiKey = import.meta.env.VITE_TMDB_API_KEY?.trim();
   const selectedGenres = useMemo(() => (categories.length ? categories : ['Action', 'Drama', 'Music']), [categories]);
 
   useEffect(() => {
@@ -37,18 +36,10 @@ export default function Movies() {
       const nextGroups = {};
       setLoadingGroups(true);
 
-      if (!apiKey) {
-        pushToast({
-          tone: 'warning',
-          title: 'TMDB key missing',
-          message: 'Showing fallback movies until a TMDB key is added.',
-        });
-      }
-
       for (const genre of selectedGenres) {
         const query = genreMap[genre] || genre.toLowerCase();
         try {
-          const movies = await searchMovieByGenre(query, apiKey);
+          const movies = await searchMovieByGenre(query);
           nextGroups[genre] = movies;
         } catch (error) {
           nextGroups[genre] = [];
@@ -70,10 +61,10 @@ export default function Movies() {
     return () => {
       cancelled = true;
     };
-  }, [apiKey, pushToast, selectedGenres]);
+  }, [pushToast, selectedGenres]);
 
   const openDetails = async (movie) => {
-    const details = await fetchMovieDetails(movie.imdbID, apiKey);
+    const details = await fetchMovieDetails(movie.imdbID);
     setSelectedMovie({ ...movie, ...details });
   };
 

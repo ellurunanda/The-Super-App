@@ -152,19 +152,26 @@ Create a local .env file in the project root.
 
 Supported keys:
 
-- VITE_OPENWEATHER_API_KEY
-- VITE_NEWS_API_KEY
-- VITE_TMDB_API_KEY
+- OPENWEATHER_API_KEY
+- NEWS_API_KEY
+- TMDB_API_KEY
+- VITE_API_BASE_URL (optional, only if frontend and API proxy are deployed separately)
 
 Use .env.example as the template.
 
 If these are not provided, the app uses built-in fallback data for weather, news, and movies.
+
+Render production note:
+
+- Deploy this project as a Render Web Service (Node runtime), not a Static Site.
+- Add OPENWEATHER_API_KEY, NEWS_API_KEY, and TMDB_API_KEY in Render environment variables.
 
 ## Available Scripts
 
 - npm run dev: starts Vite development server
 - npm run build: creates production build in dist
 - npm run preview: serves production build locally
+- npm start: runs the Express server that serves dist and proxies API requests
 
 ## User Flow
 
@@ -201,7 +208,7 @@ This allows local development and demo usage without external service setup.
 ### Live API data not showing
 
 - Check that .env exists in project root.
-- Check variable names exactly match expected VITE_ names.
+- Check variable names exactly match OPENWEATHER_API_KEY, NEWS_API_KEY, and TMDB_API_KEY.
 - Restart dev server after changing .env.
 
 ### Push blocked due to secrets
@@ -212,6 +219,7 @@ This allows local development and demo usage without external service setup.
 
 ## Security Notes
 
-- This is a frontend app, so any VITE_ key is exposed in browser runtime.
-- Use restricted or development-only keys where possible.
+- API keys are consumed by the server proxy and are not sent to browser code.
+- Keep keys only in server environment variables.
+- Do not set VITE_ API key variables in production builds.
 - Rotate keys immediately if they are accidentally committed.

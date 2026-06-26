@@ -18,18 +18,10 @@ export default function NewsWidget() {
     async function loadNews() {
       setIsLoading(true);
       try {
-        const apiKey = import.meta.env.VITE_NEWS_API_KEY?.trim();
-        if (!apiKey && !cancelled) {
-          pushToast({
-            tone: 'warning',
-            title: 'News API key missing',
-            message: 'Showing fallback headlines until a live key is added.',
-          });
-        }
-        const data = await fetchTopHeadlines('general', apiKey);
+        const data = await fetchTopHeadlines('general');
         if (!cancelled) {
           setArticles(data.slice(0, 6));
-          setStatus(apiKey ? 'Live headlines' : 'Fallback news feed');
+          setStatus('Headlines ready');
           setIsLoading(false);
         }
       } catch (error) {

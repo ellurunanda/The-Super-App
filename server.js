@@ -12,6 +12,14 @@ const openWeatherApiKey = process.env.OPENWEATHER_API_KEY || '';
 const newsApiKey = process.env.NEWS_API_KEY || '';
 const tmdbApiKey = process.env.TMDB_API_KEY || '';
 
+const upstreamClient = axios.create({
+  timeout: 12000,
+  headers: {
+    Accept: 'application/json',
+    'User-Agent': 'The-Super-App/1.0',
+  },
+});
+
 function requireApiKey(res, keyValue, keyName) {
   if (keyValue) {
     return true;
@@ -25,15 +33,22 @@ function requireApiKey(res, keyValue, keyName) {
   return false;
 }
 
-function relayAxiosError(res, error) {
+function relayAxiosError(res, source, error) {
   const status = error.response?.status || 502;
-  const message = error.response?.data || {
+  const payload = error.response?.data;
+  const message = typeof payload === 'string'
+    ? payload
+    : payload?.message || error.message || 'Upstream request failed';
+
+  console.warn(`[proxy:${source}] status=${status} message=${message}`);
+
+  res.status(status).json({
     status: 'error',
     code: 'upstreamRequestFailed',
-    message: 'Upstream API request failed.',
-  };
-
-  res.status(status).json(message);
+    source,
+    message,
+    upstreamStatus: error.response?.status || null,
+  });
 }
 
 app.get('/api/weather/weather', async (req, res) => {
@@ -42,7 +57,7 @@ app.get('/api/weather/weather', async (req, res) => {
   }
 
   try {
-    const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+    const response = await upstreamClient.get('https://api.openweathermap.org/data/2.5/weather', {
       params: {
         ...req.query,
         appid: openWeatherApiKey,
@@ -51,7 +66,7 @@ app.get('/api/weather/weather', async (req, res) => {
 
     res.status(response.status).json(response.data);
   } catch (error) {
-    relayAxiosError(res, error);
+    relayAxiosError(res, 'weather', error);
   }
 });
 
@@ -61,7 +76,7 @@ app.get('/api/news/top-headlines', async (req, res) => {
   }
 
   try {
-    const response = await axios.get('https://newsapi.org/v2/top-headlines', {
+    const response = await upstreamClient.get('https://newsapi.org/v2/top-headlines', {
       params: {
         ...req.query,
         apiKey: newsApiKey,
@@ -70,7 +85,7 @@ app.get('/api/news/top-headlines', async (req, res) => {
 
     res.status(response.status).json(response.data);
   } catch (error) {
-    relayAxiosError(res, error);
+    relayAxiosError(res, 'news', error);
   }
 });
 
@@ -80,7 +95,7 @@ app.get('/api/tmdb/search/movie', async (req, res) => {
   }
 
   try {
-    const response = await axios.get('https://api.themoviedb.org/3/search/movie', {
+    const response = await upstreamClient.get('https://api.themoviedb.org/3/search/movie', {
       params: {
         ...req.query,
         api_key: tmdbApiKey,
@@ -89,7 +104,7 @@ app.get('/api/tmdb/search/movie', async (req, res) => {
 
     res.status(response.status).json(response.data);
   } catch (error) {
-    relayAxiosError(res, error);
+    relayAxiosError(res, 'tmdb-search', error);
   }
 });
 
@@ -99,7 +114,7 @@ app.get('/api/tmdb/movie/:id', async (req, res) => {
   }
 
   try {
-    const response = await axios.get(`https://api.themoviedb.org/3/movie/${encodeURIComponent(req.params.id)}`, {
+    const response = await upstreamClient.get(`https://api.themoviedb.org/3/movie/${encodeURIComponent(req.params.id)}`, {
       params: {
         ...req.query,
         append_to_response: req.query.append_to_response || 'credits',
@@ -109,7 +124,7 @@ app.get('/api/tmdb/movie/:id', async (req, res) => {
 
     res.status(response.status).json(response.data);
   } catch (error) {
-    relayAxiosError(res, error);
+    relayAxiosError(res, 'tmdb-detail', error);
   }
 });
 

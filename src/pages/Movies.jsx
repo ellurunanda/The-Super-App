@@ -64,8 +64,16 @@ export default function Movies() {
   }, [pushToast, selectedGenres]);
 
   const openDetails = async (movie) => {
-    const details = await fetchMovieDetails(movie.imdbID);
-    setSelectedMovie({ ...movie, ...details });
+    try {
+      const details = await fetchMovieDetails(movie.imdbID);
+      setSelectedMovie({ ...movie, ...details });
+    } catch (error) {
+      pushToast({
+        tone: 'error',
+        title: 'Movie details unavailable',
+        message: 'Could not load details for this movie.',
+      });
+    }
   };
 
   const handleLogout = () => {

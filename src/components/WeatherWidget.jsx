@@ -3,18 +3,11 @@ import { Gauge, Droplets, Wind, CloudRain, LocateFixed, MapPin } from 'lucide-re
 import { fetchCurrentWeather, reverseGeocodeCoordinates } from '../services/apiServices';
 import { useStore } from '../store/useStore';
 
-const buildFallbackWeather = (city) => ({
-  name: city || 'London',
-  main: { temp: 24, pressure: 1010, humidity: 83 },
-  wind: { speed: 3.7 },
-  weather: [{ main: 'Rain', description: 'heavy rain' }],
-});
-
 export default function WeatherWidget() {
   const city = useStore((state) => state.weatherCity);
   const pushToast = useStore((state) => state.pushToast);
   const setWeatherCity = useStore((state) => state.setWeatherCity);
-  const [weather, setWeather] = useState(() => buildFallbackWeather(city));
+  const [weather, setWeather] = useState(null);
   const [draftCity, setDraftCity] = useState(city);
   const [isLoading, setIsLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -42,7 +35,7 @@ export default function WeatherWidget() {
         }
       } catch (error) {
         if (!cancelled) {
-          setWeather(buildFallbackWeather(city));
+          setWeather(null);
           setIsLoading(false);
           window.setTimeout(() => {
             if (!cancelled) {
@@ -157,18 +150,20 @@ export default function WeatherWidget() {
             <div className="skeleton-line" />
             <div className="skeleton-line skeleton-line-sm" />
           </div>
+        ) : !weather ? (
+          <div className="empty-state">Weather unavailable.</div>
         ) : (
           <>
             <div className="weather-main weather-main-figma">
               <div className="weather-first-col">
                 <CloudRain size={38} />
-                <span>{weather.weather?.[0]?.description || 'Heavy rain'}</span>
+                <span>{weather.weather?.[0]?.description || 'N/A'}</span>
               </div>
-              <div className="weather-temp">{Math.round(weather.main.temp)}°C</div>
+              <div className="weather-temp">{Number.isFinite(weather.main?.temp) ? `${Math.round(weather.main.temp)}°C` : 'N/A'}</div>
               <div className="weather-meta">
-                <span><Wind size={14} /> {weather.wind.speed} km/h Wind</span>
-                <span><Gauge size={14} /> {weather.main.pressure} mbar Pressure</span>
-                <span><Droplets size={14} /> {weather.main.humidity}% Humidity</span>
+                <span><Wind size={14} /> {weather.wind?.speed ?? 'N/A'} km/h Wind</span>
+                <span><Gauge size={14} /> {weather.main?.pressure ?? 'N/A'} mbar Pressure</span>
+                <span><Droplets size={14} /> {weather.main?.humidity ?? 'N/A'}% Humidity</span>
               </div>
             </div>
           </>

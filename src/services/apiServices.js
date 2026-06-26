@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-const weatherClient = axios.create({ baseURL: 'https://api.openweathermap.org/data/2.5' });
-const newsClient = axios.create({ baseURL: 'https://newsapi.org/v2' });
-const movieClient = axios.create({ baseURL: 'https://api.themoviedb.org/3' });
+const weatherBaseUrl = import.meta.env.DEV ? '/api/weather' : 'https://api.openweathermap.org/data/2.5';
+const newsBaseUrl = import.meta.env.DEV ? '/api/news' : 'https://newsapi.org/v2';
+const movieBaseUrl = import.meta.env.DEV ? '/api/tmdb' : 'https://api.themoviedb.org/3';
+
+const weatherClient = axios.create({ baseURL: weatherBaseUrl });
+const newsClient = axios.create({ baseURL: newsBaseUrl });
+const movieClient = axios.create({ baseURL: movieBaseUrl });
 
 const fallbackMovies = [
   {
